@@ -1,4 +1,4 @@
-#GREEDY GAME CODE IN RUBY, From Ruby-Koans
+#GREEDY GAME CODE IN RUBY
 class DiceSet #Getting random value for DICE ROLL
   attr_reader :values
   def roll(number)
