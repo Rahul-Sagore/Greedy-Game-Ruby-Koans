@@ -1,3 +1,4 @@
+#GREEDY GAME CODE IN RUBY
 class DiceSet #Getting random value for DICE ROLL
   attr_reader :values
   def roll(number)
@@ -20,7 +21,7 @@ class Player # Class for maintaining information of Player's game
 	end
 
 	def start_roll(times)  #Function for rolling DICE for the player
-	  	roll = DiceSet.new()
+	  roll = DiceSet.new()
 		rolled_dices = roll.roll(times)
 		puts "\nYour rolled dice numbers are: #{rolled_dices}"
 		get_score(rolled_dices) #Get calculated score based on DICE ROLLED
@@ -63,9 +64,9 @@ class Player # Class for maintaining information of Player's game
 
 	def showScoreInfo(score) #Display score info
 		@player[:temp_score] += score
-	  	puts "Your current score is: #{score}, \nTemporary Total score: #{@player[:temp_score]}"
-	  	puts "Previously saved Score: #{@player[:final_score]}" if @player[:final_score] > 0
-	  	score
+	  puts "Your current score is: #{score}, \nTemporary Total score: #{@player[:temp_score]}"
+	  puts "Previously saved Score: #{@player[:final_score]}" if @player[:final_score] > 0
+	  score
 	end
 end
 
