@@ -10,9 +10,8 @@ end
 class Player # Class for maintaining information of Player's game 
 	attr_accessor :player
 	def initialize(name)
-		@name = name.upcase
 		@player = {
-			name: @name,
+			name: name,
 			remaining_turn: 5,
 			final_score: 0, 
 			temp_score: 0 #temporary storing accumulating score for multiple turn
@@ -20,10 +19,10 @@ class Player # Class for maintaining information of Player's game
 		@player
 	end
 
-	def start_roll(times)  #Function for rolling DICE for the player
+	def start_roll(player)  #Function for rolling DICE for the player
 	  roll = DiceSet.new()
-		rolled_dices = roll.roll(times)
-		puts "\nYour rolled dice numbers are: #{rolled_dices}"
+		rolled_dices = roll.roll(player[:remaining_turn])
+		puts "Player #{player[:name] + 1} rolls : #{rolled_dices.join(", ")}"
 		get_score(rolled_dices) #Get calculated score based on DICE ROLLED
 	end
 
@@ -51,22 +50,8 @@ class Player # Class for maintaining information of Player's game
 		    
 		    score += points[number] * count
 	  	end
-
-	  	if @player[:temp_score] == 0  && score >= 300
-	  			showScoreInfo(score)
-	  	elsif @player[:temp_score] != 0
-	  		showScoreInfo(score)
-	  	else
-		  	@player[:remaining_turn] = 5 # Resetting the number turn
-		  	puts "OOPS! Your score is #{score}. Minimum score required to participate is 300. \n"
-	  	end
-	end
-
-	def showScoreInfo(score) #Display score info
-		@player[:temp_score] += score
-	  puts "Your current score is: #{score}, \nTemporary Total score: #{@player[:temp_score]}"
-	  puts "Previously saved Score: #{@player[:final_score]}" if @player[:final_score] > 0
-	  score
+	  	@player[:remaining_turn] = 5 if @player[:remaining_turn] == 0 #Reset to 5, if all the dice scored
+	  	score
 	end
 end
 
@@ -75,15 +60,54 @@ class Game
 		@players = [] # Array of Hashes of Players info
 		@last_game = {} # Status of lst game
 		@last_player = 0 # Set 1, if last player is winning
+		@rounds = 1 # Numbers of round/turn completed
+	end
+
+	def process_result(score, player) #Display score info
+		player_index = player[:name].next
+		puts "Score in this round: #{score}"
+		puts "Total score: #{player[:final_score]}"
+		puts "" if (player[:temp_score] == 0 && score < 300) || (score == 0 && player[:temp_score] != 0) || score == 0
+		if (player[:temp_score] == 0  && score >= 300) || player[:temp_score] != 0
+			if score != 0
+				player[:temp_score] += score
+			  puts "\e[36mDo you want to roll the non-scoring #{player[:remaining_turn]} dices?(y/n):\e[0m"
+				user_choice = gets.chomp
+
+				if user_choice == "y"
+					if player[:temp_score] > 0
+					  	player_index = player[:name] # Next Player's turn
+					end
+				else
+					puts "\n"
+					player[:final_score] += player[:temp_score] #Saving Final Score
+					player[:temp_score] = 0 # Resetting Accumulated score
+					player[:remaining_turn] = 5
+
+					if player[:final_score] >= 3000 && !@last_game[:status]
+						puts "----Give your all! This is the last turn----".upcase
+						@last_game = { status: true, is_last_player: player_index == @players.size}
+					end
+				end
+			else
+				player[:remaining_turn] = 5 # Resetting the number turn
+				player[:temp_score] = 0 # Resetting Accumulated score
+			end
+		else 
+			player[:remaining_turn] = 5 # Resetting the number turn
+			player[:temp_score] = 0 # Resetting Accumulated score
+		end
+		start_playing(player_index)
 	end
 
 	def start_game #Asking user to enter player's name
-		puts "\nPlease Enter Players name separating each one with space :"
+		puts "\nEnter Number of players :"
 		user_input = gets.chomp
-		users_array = user_input.split(" ")
-		users_array.each { |player|
+		n_players = user_input.to_i
+		n_players.times { |player|
 			@players.push Player.new(player)
 		}
+		puts "\nTurn 1: \n ------"
 		start_playing(0) #Start the game with First player
 	end
 
@@ -97,44 +121,19 @@ class Game
 			player_obj =  @players[player_index] # Varibale Caching
 			player_info = player_obj.player
 
-			puts "\nCurrent player is #{player_info[:name]}:"
-			puts "\e[31mRemaining turn: #{player_info[:remaining_turn]}. Wants to Roll the dice? (y/n) :\e[0m" 
-			choice = gets.chomp
+			score = player_obj.start_roll(player_info) # Get Score
 
-			if choice == "y" #IF user want to roll the dice 
-				score = player_obj.start_roll(player_info[:remaining_turn]) # Get Score
-
-				if score != 0 # If user scored something
-					if player_info[:temp_score] > 0
-						player_info[:remaining_turn] = 5 if player_info[:remaining_turn] == 0 # Reset turn if All dice are scoring
-					  	start_playing(player_index) #Rolling dice again
-					else
-					  	start_playing(player_index.next) # Next Player's turn
-					end
-				else # Resetting player info if failed to score something
-					player_info[:remaining_turn] = 5
-					player_info[:temp_score] = 0 # Resetting Accumulated score
-					start_playing(player_index.next) #Next player's turn
-				end
-			else # IF user chose to quit the turn
-				player_info[:final_score] += player_info[:temp_score] #Saving Final Score
-				player_info[:temp_score] = 0 # Resetting Accumulated score
-				player_info[:remaining_turn] = 5
-
-				if player_info[:final_score] >= 3000 && !@last_game[:status]
-					puts "----Give your all! This is the last turn----".upcase
-					@last_game = { status: true, is_last_player: player_index.next == @players.size}
-				end
-				start_playing(player_index.next)
-			end
+			process_result(score, player_info)
 		else
+			@rounds += 1
+			puts "Turn #{@rounds}: \n ------" if !@last_game[:status]
 			if !@last_game[:status] || @last_game[:is_last_player] # Condition if "last player" crosses winning threshhold
 				start_playing(0) #Start last game from first player if last player is winning.
 			else
 				winner = @players.max_by do |player|
 				 	player.player[:final_score]
 				end
-				puts "\nHurray! Most Greedy person is : #{winner.player[:name]} with score of #{winner.player[:final_score]} \n".upcase
+				puts "\n$$$ Hurray! Most Greedy person is : Player #{winner.player[:name] + 1} with score of #{winner.player[:final_score]} Points $$$ \n\n".upcase
 			end
 		end
 	end # End of "start_playing" Function
