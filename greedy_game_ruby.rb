@@ -71,7 +71,7 @@ class Game
 		if (player[:temp_score] == 0  && score >= 300) || player[:temp_score] != 0
 			if score != 0
 				player[:temp_score] += score
-			  puts "\e[36mDo you want to roll the non-scoring #{player[:remaining_turn]} dices?(y/n):\e[0m"
+			  	puts "\e[36mDo you want to roll the non-scoring #{player[:remaining_turn]} dices?(y/n):\e[0m"
 				user_choice = gets.chomp
 
 				if user_choice == "y"
@@ -81,23 +81,21 @@ class Game
 				else
 					puts "\n"
 					player[:final_score] += player[:temp_score] #Saving Final Score
-					player[:temp_score] = 0 # Resetting Accumulated score
-					player[:remaining_turn] = 5
 
 					if player[:final_score] >= 3000 && !@last_game[:status]
 						puts "----Give your all! This is the last turn----".upcase
 						@last_game = { status: true, is_last_player: player_index == @players.size}
 					end
 				end
-			else
-				player[:remaining_turn] = 5 # Resetting the number turn
-				player[:temp_score] = 0 # Resetting Accumulated score
 			end
-		else 
-			player[:remaining_turn] = 5 # Resetting the number turn
-			player[:temp_score] = 0 # Resetting Accumulated score
 		end
+		reset_player_turn(player) if player_index == player[:name].next
 		start_playing(player_index)
+	end
+
+	def reset_player_turn(player)
+		player[:remaining_turn] = 5 # Resetting the number turn
+		player[:temp_score] = 0 # Resetting Accumulated score
 	end
 
 	def start_game #Asking user to enter player's name
