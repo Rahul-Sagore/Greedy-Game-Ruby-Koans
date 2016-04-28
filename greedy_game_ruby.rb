@@ -67,8 +67,8 @@ class Game
 		player_index = player[:name].next
 		puts "Score in this round: #{score}"
 		puts "Total score: #{player[:final_score]}"
-		puts "" if (player[:temp_score] == 0 && score < 300) || (score == 0 && player[:temp_score] != 0) || score == 0
-		if (player[:temp_score] == 0  && score >= 300) || player[:temp_score] != 0
+		puts "" if score == 0
+		if (player[:temp_score] == 0  && score >= 0) || player[:temp_score] != 0
 			if score != 0
 				player[:temp_score] += score
 			  	puts "\e[36mDo you want to roll the non-scoring #{player[:remaining_turn]} dices?(y/n):\e[0m"
@@ -80,7 +80,9 @@ class Game
 					end
 				else
 					puts "\n"
-					player[:final_score] += player[:temp_score] #Saving Final Score
+					if player[:temp_score] >= 300
+						player[:final_score] += player[:temp_score] #Saving Final Score
+					end
 
 					if player[:final_score] >= 3000 && !@last_game[:status]
 						puts "----Give your all! This is the last turn----".upcase
