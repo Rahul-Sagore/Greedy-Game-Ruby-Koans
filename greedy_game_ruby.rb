@@ -80,7 +80,7 @@ class Game
 					end
 				else
 					puts "\n"
-					if player[:temp_score] >= 300
+					if player[:temp_score] >= 300 || player[:final_score] >= 300
 						player[:final_score] += player[:temp_score] #Saving Final Score
 					end
 
